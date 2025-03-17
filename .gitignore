@@ -1,1 +1,23 @@
-raw_data/
+#Data files
+/raw_data/
+
+# Model files and checkpoints
+/models/
+*.h5
+*.pkl
+
+# Environment and configuration
+.env
+.envrc
+.python-version
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.nbconvert.ipynb
+
+# IDE specific files
+.DS_Store
+
+# Python cache files
+__pycache__/
