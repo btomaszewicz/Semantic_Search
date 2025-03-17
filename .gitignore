@@ -21,3 +21,6 @@
 
 # Python cache files
 __pycache__/
+
+.vscode/
+package_folder.egg-info/
