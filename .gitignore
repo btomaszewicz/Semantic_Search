@@ -8,6 +8,7 @@
 
 # Environment and configuration
 .env
+.env.yaml
 .envrc
 .python-version
 
