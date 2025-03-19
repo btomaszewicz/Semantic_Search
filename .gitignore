@@ -9,6 +9,7 @@
 # Environment and configuration
 .env
 .envrc
+.env.yaml
 .python-version
 
 # Jupyter Notebooks
