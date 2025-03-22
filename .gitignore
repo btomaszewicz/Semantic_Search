@@ -1,5 +1,6 @@
 #Data files
 /raw_data/
+/preprocessed_data/
 
 # Model files and checkpoints
 /models/
