@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: package_folder
+Version: 0.0.1
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: scikit-learn==1.2.1
+Requires-Dist: numpy==1.26.4
+Requires-Dist: python-dotenv
+Dynamic: requires-dist
