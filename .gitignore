@@ -1,6 +1,6 @@
 #Data files
-/raw_data/
-/preprocessed_data/
+raw_data/
+preprocessed_data/movies_with_tokenized_plots.csv
 
 # Model files and checkpoints
 /models/
