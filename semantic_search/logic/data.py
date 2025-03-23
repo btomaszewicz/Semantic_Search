@@ -12,7 +12,7 @@ def tokenize_csv(input_csv, output_csv):
     input = input_csv
     out = output_csv
     # ipdb.set_trace()
-    print('enter tokenize')
+    # print('enter tokenize')
     if os.path.exists(output_csv):
 
         print(f'{output_csv} already exists. Skipping tokenization.')
@@ -21,25 +21,23 @@ def tokenize_csv(input_csv, output_csv):
         # Read the input CSV
         df_movies = pd.read_csv(input_csv)
 
-        # Check if the 'plot' column exists
-        if 'plot' in df_movies.columns:
-            # Apply the tokenizer to the 'plot' column
-            df_movies['wiki_plot_tokenized'] = df_movies['plot'].astype(str).apply(tokenizer)
+        df_movies['wiki_plot_tokenized'] = df_movies['Plot'].astype(str).apply(tokenizer)
             # Save the tokenized data to the output CSV
-            df_movies.to_csv(output_csv, index=False)
-            print(f'Tokenized CSV saved to {output_csv}')
-            return df_movies
-        else:
-            print('No "plot" column found in CSV.')
+        df_movies.to_csv(output_csv, index=False)
+        print(f'Tokenized CSV saved to {output_csv}')
+        return df_movies
 
 
-def load_tokenized_csv(csv_file):
+def load_tokenized_csv(csv_file,chunksize=100):
 
     try:
-        df_movies = pd.read_csv(csv_file)
-        df_movies['wiki_plot_tokenized'] = df_movies['wiki_plot_tokenized'].apply(ast.literal_eval)
-        print(f'Loaded tokenized CSV from {csv_file}')
-        return df_movies
+        for chunk in pd.read_csv(csv_file, chunksize=chunksize):
+            chunk['wiki_plot_tokenized'] = chunk['wiki_plot_tokenized'].apply(ast.literal_eval)
+            yield chunk  # Yield chunk instead of returning everything at once
+        # df_movies = pd.read_csv(csv_file)
+        # df_movies['wiki_plot_tokenized'] = df_movies['wiki_plot_tokenized'].apply(ast.literal_eval)
+        # print(f'Loaded tokenized CSV from {csv_file}')
+        # return df_movies
     except FileNotFoundError:
         print(f'File {csv_file} not found.')
         return None

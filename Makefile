@@ -53,4 +53,4 @@ cloud_run_delete_service:
 	gcloud run services delete $$INSTANCE
 
 run_movie_search:
-	python -c 'from semantic_search.interface.movie_search import search_similar_movies; search_similar_movies("batman")'
+	python -c 'from semantic_search.interface.movie_search import search_similar_movies; search_similar_movies("batman", "../preprocessed_data/movies_with_tokenized_plots.csv")'

@@ -3,24 +3,26 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 
 from operator import itemgetter
 from semantic_search.utils import truncate_plot
-from semantic_search.logic.model import dictionary, corpus, tfidf_model, lsi_model, movie_index
-from semantic_search.logic.data import load_tokenized_csv_in_chunks, tokenize_csv
+from semantic_search.logic.model import build_dictionary_in_chunks, lsi_model, movie_index
+from semantic_search.logic.data import load_tokenized_csv, tokenize_csv
 from semantic_search.logic.preprocessing import tokenizer
 
 import gensim
 
 from gensim import corpora
 from gensim.similarities import MatrixSimilarity
+from gensim.corpora import Dictionary
+from gensim.models import TfidfModel
 import os
 
-def search_similar_movies(search_term,chunk_size=100):
+def search_similar_movies(search_term,csv_file):
 
-    # df_movies = tokenize_csv('raw_data/wiki_movie_plots_deduped.csv', 'preprocessed_data/movies_with_tokenized_plots.csv')
+    df_movies = tokenize_csv('raw_data/wiki_movie_plots_deduped.csv', 'preprocessed_data/movies_with_tokenized_plots.csv')
     # print("df_movies:", df_movies.head())  # Debug
 
 
-    # # Load the tokenized data
-    # df_movies = load_tokenized_csv('preprocessed_data/movies_with_tokenized_plots.csv')
+    # Load the tokenized data
+    df_movies = load_tokenized_csv('preprocessed_data/movies_with_tokenized_plots.csv')
 
     # # Load the dictionary
     # dict = dictionary(df_movies['wiki_plot_tokenized'])
@@ -30,88 +32,93 @@ def search_similar_movies(search_term,chunk_size=100):
 
     # # Load the TF-IDF model
     # movie_tfidf_model = tfidf_model(corp, dict)
+    dictionary = build_dictionary_in_chunks(csv_file)
+    dictionary = Dictionary.load("movie_dictionary.dict")  # Load from disk
+    corpus = (dictionary.doc2bow(text) for chunk in load_tokenized_csv(csv_file, chunksize=100) for text in chunk['wiki_plot_tokenized'])
+    build_tfidf(dictionary, csv_file)
+    movie_tfidf_model = TfidfModel.load("tfidf_model.tfidf")    # Load from disk
 
-    # # Load the LSI model
-    # movie_lsi_model = lsi_model(corp, dict, movie_tfidf_model)
+    # Load the LSI model
+    movie_lsi_model = lsi_model(corpus, dict, movie_tfidf_model)
 
-    # # Load the movie index
-    # movie_index(movie_lsi_model, len(dictionary))
+    # Load the movie index
+    mov_index = movie_index(movie_lsi_model, len(dictionary))
 
-    # # Tokenize the search term and convert to LSI space
+    # Tokenize the search term and convert to LSI space
 
-    # query_bow = dict.doc2bow(tokenizer(search_term))
-    # query_tfidf = movie_tfidf_model[query_bow]
-    # query_lsi = movie_lsi_model[query_tfidf]
+    query_bow = dict.doc2bow(tokenizer(search_term))
+    query_tfidf = movie_tfidf_model[query_bow]
+    query_lsi = movie_lsi_model[query_tfidf]
 
-    # # Get the similarity scores
-    # movies_list = movie_index[query_lsi]
-    # movies_list.sort(key=itemgetter(1), reverse=True)
+    # Get the similarity scores
+    movies_list = mov_index[query_lsi]
+    movies_list.sort(key=itemgetter(1), reverse=True)
 
-    # Check if the tokenized file exists, if not create it
-    if not os.path.exists('preprocessed_data/movies_with_tokenized_plots.csv'):
-        print("Tokenizing raw data...")
-        tokenize_csv('raw_data/wiki_movie_plots_deduped.csv', 'preprocessed_data/movies_with_tokenized_plots.csv')
+    # # Check if the tokenized file exists, if not create it
+    # if not os.path.exists('preprocessed_data/movies_with_tokenized_plots.csv'):
+    #     print("Tokenizing raw data...")
+    #     tokenize_csv('raw_data/wiki_movie_plots_deduped.csv', 'preprocessed_data/movies_with_tokenized_plots.csv')
 
-    # Load the data in chunks and process incrementally
-    chunks_generator = load_tokenized_csv_in_chunks('preprocessed_data/movies_with_tokenized_plots.csv', chunk_size)
+    # # Load the data in chunks and process incrementally
+    # chunks_generator = load_tokenized_csv_in_chunks('preprocessed_data/movies_with_tokenized_plots.csv', chunk_size)
 
-    # Initialize empty containers
-    all_tokens = []
-    all_movies = []
-    chunk_count = 0
+    # # Initialize empty containers
+    # all_tokens = []
+    # all_movies = []
+    # chunk_count = 0
 
-    # First pass: collect tokenized plots and build dictionary
-    print("Processing data in chunks and building dictionary...")
-    for chunk in chunks_generator:
-        if chunk is None:
-            return None
+    # # First pass: collect tokenized plots and build dictionary
+    # print("Processing data in chunks and building dictionary...")
+    # for chunk in chunks_generator:
+    #     if chunk is None:
+    #         return None
 
-        chunk_count += 1
-        print(f"Processing chunk {chunk_count} for dictionary building...")
+    #     chunk_count += 1
+    #     print(f"Processing chunk {chunk_count} for dictionary building...")
 
-        # Store movie data
-        for _, movie in chunk.iterrows():
-            all_movies.append({
-                'Title': movie['Title'],
-                'Plot': movie['Plot'],
-                'tokens': movie['wiki_plot_tokenized']
-            })
-            all_tokens.append(movie['wiki_plot_tokenized'])
+    #     # Store movie data
+    #     for _, movie in chunk.iterrows():
+    #         all_movies.append({
+    #             'Title': movie['Title'],
+    #             'Plot': movie['Plot'],
+    #             'tokens': movie['wiki_plot_tokenized']
+    #         })
+    #         all_tokens.append(movie['wiki_plot_tokenized'])
 
-        # Process in smaller batches to avoid memory issues
-        if chunk_count % 10 == 0:
-            print(f"Processed {len(all_movies)} movies so far...")
+    #     # Process in smaller batches to avoid memory issues
+    #     if chunk_count % 10 == 0:
+    #         print(f"Processed {len(all_movies)} movies so far...")
 
-    # Now build the models with the collected data
-    print("Building models...")
-    dictionary = gensim.corpora.Dictionary(all_tokens)
-    corpus = [dictionary.doc2bow(text) for text in all_tokens]
+    # # Now build the models with the collected data
+    # print("Building models...")
+    # dictionary = gensim.corpora.Dictionary(all_tokens)
+    # corpus = [dictionary.doc2bow(text) for text in all_tokens]
 
-    # Release memory by deleting the tokens list
-    del all_tokens
+    # # Release memory by deleting the tokens list
+    # del all_tokens
 
-    # Build TF-IDF model
-    tfidf_model = gensim.models.TfidfModel(corpus)
-    corpus_tfidf = tfidf_model[corpus]
+    # # Build TF-IDF model
+    # tfidf_model = gensim.models.TfidfModel(corpus)
+    # corpus_tfidf = tfidf_model[corpus]
 
-    # Build LSI model (with fewer topics to save memory)
-    lsi_model = gensim.models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=100)
-    corpus_lsi = lsi_model[corpus_tfidf]
+    # # Build LSI model (with fewer topics to save memory)
+    # lsi_model = gensim.models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=100)
+    # corpus_lsi = lsi_model[corpus_tfidf]
 
-    # Build similarity index
-    index = gensim.similarities.MatrixSimilarity(corpus_lsi)
+    # # Build similarity index
+    # index = gensim.similarities.MatrixSimilarity(corpus_lsi)
 
     # Process the query
-    query_bow = dictionary.doc2bow(tokenizer(search_term))
-    query_tfidf = tfidf_model[query_bow]
-    query_lsi = lsi_model[query_tfidf]
+    # query_bow = dictionary.doc2bow(tokenizer(search_term))
+    # query_tfidf = tfidf_model[query_bow]
+    # query_lsi = lsi_model[query_tfidf]
 
-    # Calculate similarities
-    similarities = index[query_lsi]
+    # # Calculate similarities
+    # similarities = index[query_lsi]
 
-    # Create a list of (index, similarity) tuples and sort by similarity
-    movies_list = [(i, similarity) for i, similarity in enumerate(similarities)]
-    movies_list.sort(key=lambda x: x[1], reverse=True)
+    # # Create a list of (index, similarity) tuples and sort by similarity
+    # movies_list = [(i, similarity) for i, similarity in enumerate(similarities)]
+    # movies_list.sort(key=lambda x: x[1], reverse=True)
 
     # Rest of your search results display code...
 
