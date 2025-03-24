@@ -7,7 +7,13 @@ import spacy
 from gensim import corpora, models
 from gensim.similarities import MatrixSimilarity
 
-from .dataclasses import Movie
+from .data_models import Movie
+# Search function to get the most similar movies
+from operator import itemgetter
+# Tokenizer function for the user query
+from spacy.lang.en.stop_words import STOP_WORDS
+
+
 
 #Load the Gensim dictionary for the American movies subset
 
@@ -29,8 +35,6 @@ movie_lsi_am_corpus = corpora.MmCorpus(str(base_dir / 'models' / 'movie_lsi_am_m
 am_movie_index = MatrixSimilarity(movie_lsi_am_corpus, num_features = 2000)
 
 
-# Tokenizer function for the user query
-from spacy.lang.en.stop_words import STOP_WORDS
 
 spacy_nlp = spacy.load('en_core_web_sm')
 
@@ -53,21 +57,30 @@ def tokenizer(sentence):
 
 
 
-# Search function to get the most similar movies
-from operator import itemgetter
-
-def search_similar_movies(search_term, page=1, per_page=10):
-
+def search_similar_movies_df(search_term):
     query_bow = am_dictionary.doc2bow(tokenizer(search_term))
     query_tfidf = movie_tfidf_am_model[query_bow]
     query_lsi = movie_lsi_am_model[query_tfidf]
 
-    am_movie_index.num_best = 100
+    am_movie_index.num_best = 10
 
     movies_list = am_movie_index[query_lsi]
 
-    movies_list.sort(key=itemgetter(1), reverse=True)
+    # convert movies_list to a pandas dataframe
 
+    movies_list.sort(key=itemgetter(1), reverse=True)
+    return pd.DataFrame([
+        {
+            'Title': am_titles['Title'][movie[0]],
+            'Release Year': am_titles['Release Year'][movie[0]],
+            'Director': am_titles['Director'][movie[0]],
+            'Genre': am_titles['Genre'][movie[0]],
+            'Wiki Page': am_titles['Wiki Page'][movie[0]]
+        } for movie in movies_list])
+
+
+def search_similar_movies(search_term, page=1, per_page=10):
+    movies_list = search_similar_movies_df(search_term, page, per_page)
     return [
         Movie(
             title=am_titles['Title'][movie[0]],

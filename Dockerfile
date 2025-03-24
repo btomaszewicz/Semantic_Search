@@ -23,4 +23,8 @@ RUN python -m spacy download en_core_web_sm
 COPY package_folder package_folder
 
 #Run container with hot reload
-CMD uvicorn package_folder.api_file:app --reload --host 0.0.0.0 --port $PORT
+# CMD uvicorn package_folder.api_file:app --reload --host 0.0.0.0 --port $PORT
+
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+
+CMD streamlit run package_folder/frontend.py --server.port=${PORT} --server.address=0.0.0.0

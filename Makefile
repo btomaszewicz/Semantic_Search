@@ -2,11 +2,14 @@
 ### DOCKER LOCAL
 #########
 
+include .env
+
+
 build_container_local:
 	docker build --tag=${IMAGE}:dev .
 
 run_container_local: build_container_local
-	docker run -it -e PORT=8000 -v ./package_folder:/app/package_folder -p 8000:8000 ${IMAGE}:dev
+	docker run -it -e PORT=${PORT} -v ./package_folder:/app/package_folder -p ${PORT}:${PORT} ${IMAGE}:dev
 
 #########
 ## DOCKER DEPLOYMENT
@@ -24,7 +27,7 @@ create_artifacts_repo:
 build_for_production:
 	docker build -t  ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${IMAGE}:prod .
 
-### Step 3 (⚠️ M1 M2 M3 M4 M5 SPECIFICALLY)
+### Step 3 (⚠️ M1 M2 M3 M4 SPECIFICALLY)
 m_chip_build_image_production:
 	docker build --platform linux/amd64 -t ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GCP_REPOSITORY}/${IMAGE}:prod .
 
@@ -36,7 +39,7 @@ push_image_production:
 deploy:
 	gcloud run deploy --image ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GCP_REPOSITORY}/${IMAGE}:prod --memory ${GAR_MEMORY} --region ${GCP_REGION} --timeout=600 --cpu 2 ${GCP_SERVICE_NAME} --allow-unauthenticated
 
-disable:
+undeploy:
 	gcloud run services delete ${GCP_SERVICE_NAME} --region=${GCP_REGION}
 
 build_deploy_mac: m_chip_build_image_production push_image_production deploy
@@ -55,9 +58,14 @@ cloud_run_delete_service:
 
 
 download_models:
-	# Download models from GCS
+	# Download models from GCS to run the service locally
 	gsutil cp -r gs://${GCP_BUCKET}/models models
 
 upload_models:
 	# Upload models to GCS
 	gsutil cp -r models gs://${GCP_BUCKET}/models
+
+
+
+dev_frontend:
+	cd frontend && streamlit
