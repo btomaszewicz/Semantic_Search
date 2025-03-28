@@ -13,7 +13,20 @@ def search_movies(search_term: str, page: int=1, per_page: int=10) -> list[dict]
 page = 1
 per_page = 10
 
-st.title('Movie Search Engine')
+# Set page configuration
+st.set_page_config(
+    page_title="Movie Title Search",
+    page_icon="🎬",
+    layout="centered"
+)
+# App header
+st.title("🎬 Movie Search Engine")
+st.subheader("Find movies by describing what you can remember")
+
+# Description
+st.markdown("""
+Write in plain words the key elements you can remind of the movie.
+""")
 
 movies = []
 
@@ -35,3 +48,11 @@ if st.button('Search'):
     if movies and page > 1 and st.button('Previous Page', key='previous_page'):
         page -= 1
         movies = search_movies(search_term, page, per_page)
+
+# Footer
+st.markdown("---")
+st.markdown(
+    "This is a semantic movie search engine that helps you find movies "
+    "based on plot descriptions. It uses natural language processing to understand "
+    "your query and find the most relevant matches."
+)
