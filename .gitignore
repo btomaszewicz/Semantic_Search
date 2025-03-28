@@ -1,11 +1,13 @@
 #Data files
 raw_data/
 preprocessed_data/movies_with_tokenized_plots.csv
+preprocessed_data/
 
 # Model files and checkpoints
 /models/
 *.h5
 *.pkl
+*.csv
 
 # Environment and configuration
 .env
