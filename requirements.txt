@@ -1,26 +1,24 @@
 #API
-fastapi==0.103.2
-uvicorn==0.34.0
-streamlit==1.24.1
+fastapi
+uvicorn
+streamlit
 
 
 #ML
-gensim==4.3.3
-pyarrow==8.0.0
-numpy==1.23.4
-pandas==1.4.4
-scikit-learn==1.2.1
-numpy==1.26.4
-pandas==1.3.5
-gensim==4.2.0
-nltk==3.6.5
-transformers==4.12.2
-torch==1.10.2
-torchvision==0.11.3
-sentence-transformers==2.1.0
-spacy==3.2.1
-en_core_web_sm @
+scikit-learn
+scipy
+numpy
+pandas
+gensim
+nltk
+spacy
+en_core_web_sm
+
 
 
 #.env
-python-dotenv==1.0.1
+python-dotenv
+
+
+tabulate
+colorama

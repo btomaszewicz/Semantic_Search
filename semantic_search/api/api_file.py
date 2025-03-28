@@ -1,16 +1,19 @@
-from fastapi import FastAPI
-import pickle
-from movie_search import search_movies
+from fastapi import FastAPI, Query, Response
+import pandas as pd
+from tabulate import tabulate
+from semantic_search.interface.movie_search import search_similar_movies
+from fastapi import HTTPException
 
 app = FastAPI()
 
-@app.get('/')
+@app.get("/")
 def root():
-    return {'hello': 'world'}
+    return {"hello": "world"}
 
-@app.get('/predict')
-def predict(search_terms):
 
-    prediction = search_movies(search_terms)
 
-    return {"prediction": prediction}
+@app.get("/search/")
+def search_movies(query: str, results_per_page: int = 10, page: int = 1):
+    if not query:
+        return []
+    return search_similar_movies(query, results_per_page, page)
