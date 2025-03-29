@@ -15,13 +15,11 @@ run_container_local: build_container_local
 ## DOCKER DEPLOYMENT
 #########
 
-# Step 1 ( ONLY FIRST TIME)
-allow_docker_push:
+# setup
+initial_setup:
 	gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
-
-# Step 2 ( ONLY FIRST TIME)
-create_artifacts_repo:
 	gcloud artifacts repositories create ${GCP_PROJECT} --repository-format=docker --location=${GCP_REGION} --description="Repository for storing images"
+
 
 # Step 3
 build_for_production:
@@ -66,6 +64,7 @@ upload_models:
 	gsutil cp -r models gs://${GCP_BUCKET}/models
 
 
-
 dev_frontend:
 	cd frontend && streamlit
+
+build_frontend:

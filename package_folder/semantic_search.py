@@ -80,12 +80,12 @@ def search_similar_movies_df(search_term):
 
 
 def search_similar_movies(search_term, page=1, per_page=10):
-    movies_list = search_similar_movies_df(search_term, page, per_page)
+    movies_list = search_similar_movies_df(search_term).to_dict(orient='records')
     return [
         Movie(
-            title=am_titles['Title'][movie[0]],
-            release_year=am_titles['Release Year'][movie[0]],
-            director=am_titles['Director'][movie[0]],
-            genre=am_titles['Genre'][movie[0]],
-            wiki_page=am_titles['Wiki Page'][movie[0]]
+            title=movie['Title'],
+            release_year=movie['Release Year'],
+            director=movie['Director'],
+            genre=movie['Genre'],
+            wiki_page=movie['Wiki Page']
         ) for movie in movies_list[(page-1)*per_page:page*per_page]]
