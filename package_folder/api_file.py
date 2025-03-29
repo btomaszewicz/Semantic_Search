@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .dataclasses import Movie
+from .data_models import Movie
 from .semantic_search import search_similar_movies
 
 app = FastAPI()

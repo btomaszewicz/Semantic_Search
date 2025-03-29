@@ -8,26 +8,46 @@ from package_folder.semantic_search import search_similar_movies_df
 page = 1
 per_page = 10
 
-st.title('Movie Search Engine')
+
+# Set page configuration
+st.set_page_config(
+    page_title="Movie Title Search",
+    page_icon="🎬",
+    layout="centered"
+)
 
 
-search_term = st.text_input('Enter a search term')
-movies = search_similar_movies_df(search_term)
+# App header
+st.title("🎬 Movie Title Search")
+st.subheader("Find movie titles by describing their plots")
 
+# # Description
+# st.markdown("""
+# Enter what you remember from a movie plot and we'll find the closest matches for you!
+# """)
 
-# Button to trigger the search
-if st.button('Search'):
-    # Fetch movies using the search function
-    movies = search_similar_movies_df(search_term)
+# st.markdown("---")
+# st.markdown(
+#     "This is a semantic search engine that helps you find movies "
+#     "based on plot descriptions. It uses natural language processing to understand "
+#     "your query and find the most relevant matches."
+# )
 
-    # Check if movies were found
-    # Display the results in a table
-    st.write("Search Results:")
+# Search input
+with st.form(key="search_form"):
+    query = st.text_area(
+        "Describe the plot or themes you're interested in:",
+        placeholder="Example: Dinosaur adventure. Scientists escaping genetically engineered dinosaurs on an island.",
+        height=50
+    )
+    if st.form_submit_button(label="Search Movies"):
+        movies = search_similar_movies_df(query).to_dict(orient='records')
+        for movie in movies:
+            st.write(f"Title: **{movie['Title']}**")
+            st.write(f"Release Year: {movie['Release Year']}")
+            st.write(f"Director: {movie['Director']}")
+            st.write(f"Genre: {movie['Genre']}")
+            st.write(f"Wiki Page: {movie['Wiki Page']}")
+            st.write('---')
 
-
-    # # format the frontend column Wiki Page to be clickable
-    # def make_clickable(val):
-    #     return f'<a href="{val}">{val}</a>'
-
-    # movies['wiki_page'] = movies['wiki_page'].apply(make_clickable)
-    st.dataframe(movies, column_config={'Wiki Page': st.column_config.LinkColumn('Wiki Page')})
+# Footer
