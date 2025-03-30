@@ -2,12 +2,22 @@
 
 import streamlit as st
 import pandas as pd
-from package_folder.semantic_search import search_similar_movies_df
+from package_folder.semantic_search import search_similar_movies
 
 
-page = 1
+# Initialize session state for pagination
+if 'page' not in st.session_state:
+    st.session_state.page = 1
+if 'query' not in st.session_state:
+    st.session_state.query = ""
+if 'has_results' not in st.session_state:
+    st.session_state.has_results = False
+
 per_page = 10
 
+# Function to load more results
+def load_more_results():
+    st.session_state.page += 1
 
 # Set page configuration
 st.set_page_config(
@@ -16,22 +26,9 @@ st.set_page_config(
     layout="centered"
 )
 
-
 # App header
 st.title("🎬 Movie Title Search")
 st.subheader("Find movie titles by describing their plots")
-
-# # Description
-# st.markdown("""
-# Enter what you remember from a movie plot and we'll find the closest matches for you!
-# """)
-
-# st.markdown("---")
-# st.markdown(
-#     "This is a semantic search engine that helps you find movies "
-#     "based on plot descriptions. It uses natural language processing to understand "
-#     "your query and find the most relevant matches."
-# )
 
 # Search input
 with st.form(key="search_form"):
@@ -41,13 +38,35 @@ with st.form(key="search_form"):
         height=50
     )
     if st.form_submit_button(label="Search Movies"):
-        movies = search_similar_movies_df(query).to_dict(orient='records')
+        # Reset page on new search
+        st.session_state.page = 1
+        st.session_state.query = query
+        st.session_state.has_results = True
+
+# If we have a query (either from form submission or previous state)
+if st.session_state.has_results:
+    # Get movies for the current page
+    movies = search_similar_movies(st.session_state.query, page=st.session_state.page, per_page=per_page)
+
+    # Display results
+    if movies:
         for movie in movies:
-            st.write(f"Title: **{movie['Title']}**")
-            st.write(f"Release Year: {movie['Release Year']}")
-            st.write(f"Director: {movie['Director']}")
-            st.write(f"Genre: {movie['Genre']}")
-            st.write(f"Wiki Page: {movie['Wiki Page']}")
+            st.write(f"Title: **{movie.title}**")
+            st.write(f"Release Year: {movie.release_year}")
+            st.write(f"Director: {movie.director}")
+            st.write(f"Genre: {movie.genre}")
+            st.write(f"Wiki Page: {movie.wiki_page}")
             st.write('---')
 
-# Footer
+        # Add prompt and buttons for more results
+        st.write("Do you see the movie you had in mind in the list?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("No, show me more movies"):
+                load_more_results()
+                st.experimental_rerun()
+        with col2:
+            if st.button("Yes, I found it"):
+                st.success("Great! We're glad you found what you were looking for.")
+    else:
+        st.write("No more results found.")
