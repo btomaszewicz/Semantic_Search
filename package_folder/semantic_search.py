@@ -13,6 +13,8 @@ from operator import itemgetter
 # Tokenizer function for the user query
 from spacy.lang.en.stop_words import STOP_WORDS
 
+from movie_image import get_movie_poster
+
 
 
 #Load the Gensim dictionary for the American movies subset
@@ -112,5 +114,7 @@ def search_similar_movies(search_term, page=1, per_page=10):
             release_year=movie['Release Year'],
             director=movie['Director'],
             genre=movie['Genre'],
-            wiki_page=movie['Wiki Page']
+            wiki_page=movie['Wiki Page'],
+            image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
+            # imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
         ) for movie in movies_list]
