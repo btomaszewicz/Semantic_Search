@@ -116,5 +116,5 @@ def search_similar_movies(search_term, page=1, per_page=10):
             genre=movie['Genre'],
             wiki_page=movie['Wiki Page'],
             image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
-            # imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
+            imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
         ) for movie in movies_list]

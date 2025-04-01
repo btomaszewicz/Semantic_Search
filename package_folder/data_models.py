@@ -8,4 +8,4 @@ class Movie:
     genre: str
     wiki_page: str
     image_url: str
-    # imdb_id: str = None
+    imdb_id: str
