@@ -1,7 +1,7 @@
 #API
 fastapi==0.103.2
 uvicorn==0.34.0
-streamlit==1.24.1
+streamlit==1.44.1
 
 #ML
 gensim==4.3.3
@@ -15,3 +15,6 @@ typing_extensions<4.6.0 # for spacy install to work
 
 #.env
 python-dotenv==1.0.1
+
+#scrapping
+beautifulsoup4

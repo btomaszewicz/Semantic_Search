@@ -216,7 +216,7 @@ with st.form(key="search_form"):
     query = st.text_area(
         "Describe the plot or themes you're interested in:",
         placeholder="Example: Dinosaur adventure. Scientists escaping genetically engineered dinosaurs on an island.",
-        height=50
+        height=68
     )
     if st.form_submit_button(label="Search Movies"):
         # Reset page on new search
@@ -264,7 +264,7 @@ if st.session_state.has_results:
         with col1:
             if st.button("No, show me more movies"):
                 load_more_results()
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("Yes, I found it"):
                 st.success("Great! We're glad you found what you were looking for.")
