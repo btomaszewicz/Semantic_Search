@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass
 class Movie:
@@ -8,4 +9,4 @@ class Movie:
     genre: str
     wiki_page: str
     image_url: str
-    imdb_id: str
+    imdb_id: Optional[str]

@@ -13,7 +13,7 @@ from operator import itemgetter
 # Tokenizer function for the user query
 from spacy.lang.en.stop_words import STOP_WORDS
 
-from movie_image import get_movie_poster
+from package_folder.movie_image import get_movie_poster
 
 
 
@@ -105,9 +105,26 @@ def search_similar_movies_df(search_term, page=1, per_page=10):
     return df, pagination_info
 
 
+# def search_similar_movies(search_term, page=1, per_page=10):
+#     movies_df, _ = search_similar_movies_df(search_term, page=page, per_page=per_page)
+#     movies_list = movies_df.to_dict(orient='records')
+#     return [
+#         Movie(
+#             title=movie['Title'],
+#             release_year=movie['Release Year'],
+#             director=movie['Director'],
+#             genre=movie['Genre'],
+#             wiki_page=movie['Wiki Page'],
+#             image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
+#             imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
+#         ) for movie in movies_list]
+
+from package_folder.movie_image import get_imdb_from_wikipedia
+
 def search_similar_movies(search_term, page=1, per_page=10):
     movies_df, _ = search_similar_movies_df(search_term, page=page, per_page=per_page)
     movies_list = movies_df.to_dict(orient='records')
+
     return [
         Movie(
             title=movie['Title'],
@@ -115,6 +132,8 @@ def search_similar_movies(search_term, page=1, per_page=10):
             director=movie['Director'],
             genre=movie['Genre'],
             wiki_page=movie['Wiki Page'],
-            image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
-            imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
-        ) for movie in movies_list]
+            image_url=get_movie_poster(movie['Title']),  # Récupère l'affiche du film
+            imdb_id=get_imdb_from_wikipedia(movie['Wiki Page'])  # Extrait l'IMDb ID de la page Wikipedia
+        )
+        for movie in movies_list
+    ]

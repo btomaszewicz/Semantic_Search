@@ -1,17 +1,20 @@
 #API
-fastapi==0.103.2
-uvicorn==0.34.0
-streamlit==1.24.1
+fastapi
+uvicorn
+streamlit
 
 #ML
-gensim==4.3.3
-pyarrow==8.0.0
-numpy==1.23.4
-pandas==1.4.4
-scikit-learn==1.2.1
-spacy==3.1.2
+gensim
+pyarrow
+numpy
+pandas
+scikit-learn
+spacy
 typing_extensions<4.6.0 # for spacy install to work
 
 
 #.env
-python-dotenv==1.0.1
+python-dotenv
+
+#Web
+bs4
