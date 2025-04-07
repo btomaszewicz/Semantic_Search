@@ -59,55 +59,128 @@ def tokenizer(sentence):
 
 
 
-def search_similar_movies_df(search_term, page=1, per_page=10):
+# def search_similar_movies_df(search_term, page=1, per_page=10):
+#     query_bow = am_dictionary.doc2bow(tokenizer(search_term))
+#     query_tfidf = movie_tfidf_am_model[query_bow]
+#     query_lsi = movie_lsi_am_model[query_tfidf]
+
+#     # Set num_best to ensure we get enough results for the requested page
+#     # We could set this higher if we anticipate needing more results
+#     am_movie_index.num_best = page * per_page
+
+#     movies_list = am_movie_index[query_lsi]
+
+#     # Sort by similarity score in descending order
+#     movies_list.sort(key=itemgetter(1), reverse=True)
+
+#     # Calculate start and end indices for the requested page
+#     start_idx = (page - 1) * per_page
+#     end_idx = start_idx + per_page
+
+#     # Slice the results to get just the current page
+#     page_movies_list = movies_list[start_idx:end_idx]
+
+#     # Convert to DataFrame
+#     df = pd.DataFrame([
+#         {
+#             'Title': am_titles['Title'][movie[0]],
+#             'Release Year': am_titles['Release Year'][movie[0]],
+#             'Director': am_titles['Director'][movie[0]],
+#             'Genre': am_titles['Genre'][movie[0]],
+#             'Wiki Page': am_titles['Wiki Page'][movie[0]],
+#             'Similarity': float(movie[1])
+#         } for movie in page_movies_list])
+
+#     # Return DataFrame along with pagination metadata
+#     total_results = len(movies_list)
+#     total_pages = (total_results + per_page - 1) // per_page
+
+#     pagination_info = {
+#         'page': page,
+#         'per_page': per_page,
+#         'total_results': total_results,
+#         'total_pages': total_pages
+#     }
+
+#     return df, pagination_info
+
+
+def compute_metadata_score(query_director, query_cast, movie_director, movie_cast):
+    score = 0.0
+    movie_director = movie_director or ""
+    movie_cast = movie_cast or ""
+
+    if query_director and query_director.lower() in movie_director.lower():
+        score += 1.0
+
+    if query_cast:
+        query_cast_set = set([name.strip().lower() for name in query_cast])
+        movie_cast_set = set([name.strip().lower() for name in movie_cast.split(",") if name])
+        overlap = len(query_cast_set & movie_cast_set)
+        score += overlap / max(len(query_cast_set), 1)
+
+    return score
+
+def search_similar_movies_df(search_term, page=1, per_page=10, query_director=None, query_cast=None, metadata_weight=0.2):
     query_bow = am_dictionary.doc2bow(tokenizer(search_term))
     query_tfidf = movie_tfidf_am_model[query_bow]
     query_lsi = movie_lsi_am_model[query_tfidf]
 
-    # Set num_best to ensure we get enough results for the requested page
-    # We could set this higher if we anticipate needing more results
-    am_movie_index.num_best = page * per_page
+    # Temporarily grab more movies to ensure we're considering a larger set for re-ranking
+    am_movie_index.num_best = 100  # Increased to ensure we get a good pool for re-ranking
 
-    movies_list = am_movie_index[query_lsi]
+    # Get raw LSI similarities
+    raw_results = am_movie_index[query_lsi]
 
-    # Sort by similarity score in descending order
-    movies_list.sort(key=itemgetter(1), reverse=True)
+    # Store combined scores
+    combined_scores = []
 
-    # Calculate start and end indices for the requested page
-    start_idx = (page - 1) * per_page
-    end_idx = start_idx + per_page
+    # Iterate through the results and compute the combined scores
+    for movie_id, lsi_score in raw_results:
+        row = am_titles.iloc[movie_id]
+        meta_score = compute_metadata_score(
+            query_director, query_cast,
+            row.get("Director", ""),
+            row.get("Cast", "")
+        )
+        total_score = lsi_score + metadata_weight * meta_score
+        combined_scores.append((movie_id, total_score))
 
-    # Slice the results to get just the current page
-    page_movies_list = movies_list[start_idx:end_idx]
+    # Sort all results by the combined score (higher is better)
+    combined_scores.sort(key=itemgetter(1), reverse=True)
 
-    # Convert to DataFrame
+    # Apply pagination: calculate the start and end indices for the page
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_scores = combined_scores[start:end]
+
+    # Create a DataFrame for the top N results
     df = pd.DataFrame([
         {
-            'Title': am_titles['Title'][movie[0]],
-            'Release Year': am_titles['Release Year'][movie[0]],
-            'Director': am_titles['Director'][movie[0]],
-            'Genre': am_titles['Genre'][movie[0]],
-            'Wiki Page': am_titles['Wiki Page'][movie[0]],
-            'Similarity': float(movie[1])
-        } for movie in page_movies_list])
+            'Title': am_titles['Title'][movie_id],
+            'Release Year': am_titles['Release Year'][movie_id],
+            'Director': am_titles['Director'][movie_id],
+            'Genre': am_titles['Genre'][movie_id],
+            'Wiki Page': am_titles['Wiki Page'][movie_id],
+            'Similarity': float(score)
+        } for movie_id, score in page_scores
+    ])
 
-    # Return DataFrame along with pagination metadata
-    total_results = len(movies_list)
+    # Calculate total number of results and total number of pages for pagination metadata
+    total_results = len(combined_scores)
     total_pages = (total_results + per_page - 1) // per_page
 
-    pagination_info = {
-        'page': page,
-        'per_page': per_page,
-        'total_results': total_results,
-        'total_pages': total_pages
-    }
-
-    return df, pagination_info
+    return df, {'page': page, 'per_page': per_page, 'total_results': total_results, 'total_pages': total_pages}
 
 
-def search_similar_movies(search_term, page=1, per_page=10):
-    movies_df, _ = search_similar_movies_df(search_term, page=page, per_page=per_page)
+def search_similar_movies(search_term, page=1, per_page=10, query_director=None, query_cast=None):
+    movies_df, _ = search_similar_movies_df(
+        search_term, page=page, per_page=per_page,
+        query_director=query_director,
+        query_cast=query_cast
+    )
     movies_list = movies_df.to_dict(orient='records')
+
     return [
         Movie(
             title=movie['Title'],
@@ -115,6 +188,22 @@ def search_similar_movies(search_term, page=1, per_page=10):
             director=movie['Director'],
             genre=movie['Genre'],
             wiki_page=movie['Wiki Page'],
-            image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
-            imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
-        ) for movie in movies_list]
+            image_url=get_movie_poster(movie['Title']),
+            imdb_id=movie.get('IMDB ID')
+        ) for movie in movies_list
+    ]
+
+
+# def search_similar_movies(search_term, page=1, per_page=10):
+#     movies_df, _ = search_similar_movies_df(search_term, page=page, per_page=per_page)
+#     movies_list = movies_df.to_dict(orient='records')
+#     return [
+#         Movie(
+#             title=movie['Title'],
+#             release_year=movie['Release Year'],
+#             director=movie['Director'],
+#             genre=movie['Genre'],
+#             wiki_page=movie['Wiki Page'],
+#             image_url=get_movie_poster(movie['Title']),  # Fetch movie poster URL
+#             imdb_id=movie.get('IMDB ID')  # Include IMDb ID if available
+#         ) for movie in movies_list]
