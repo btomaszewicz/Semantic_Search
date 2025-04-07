@@ -180,6 +180,7 @@ import os
 from dotenv import load_dotenv
 from package_folder.semantic_search import search_similar_movies
 from movie_image import get_movie_poster, get_imdb_from_wikipedia
+import logging
 
 # Load environment variables
 load_dotenv()
@@ -193,6 +194,10 @@ if 'query' not in st.session_state:
     st.session_state.query = ""
 if 'has_results' not in st.session_state:
     st.session_state.has_results = False
+if 'director' not in st.session_state:
+    st.session_state.director = ""
+if 'cast' not in st.session_state:
+    st.session_state.cast = ""  # Initialize 'cast' as an empty string
 
 per_page = 10
 
@@ -216,18 +221,29 @@ with st.form(key="search_form"):
     query = st.text_area(
         "Describe the plot or themes you're interested in:",
         placeholder="Example: Dinosaur adventure. Scientists escaping genetically engineered dinosaurs on an island.",
-        height=68
-    )
+        height=68)
+    director = st.text_input("Optional: Filter by director name")
+    cast_input = st.text_input("Optional: Filter by cast (comma-separated)")
+
     if st.form_submit_button(label="Search Movies"):
-        # Reset page on new search
+    # Reset page on new search
         st.session_state.page = 1
-        st.session_state.query = query
+        st.session_state.query = query.strip()
+        st.session_state.director = director.strip()
+        st.session_state.cast = cast_input.strip()
         st.session_state.has_results = True
 
 # If we have a query (either from form submission or previous state)
 if st.session_state.has_results:
     # Get movies for the current page
-    movies = search_similar_movies(st.session_state.query, page=st.session_state.page, per_page=per_page)
+    cast_list = [c.strip() for c in st.session_state.cast.split(",")] if st.session_state.cast else None
+    movies = search_similar_movies(
+    st.session_state.query,
+    page=st.session_state.page,
+    per_page=per_page,
+    query_director=st.session_state.director,
+    query_cast=cast_list
+)
 
     # Display results
     if movies:
@@ -264,6 +280,7 @@ if st.session_state.has_results:
         with col1:
             if st.button("No, show me more movies"):
                 load_more_results()
+                logging.debug("Rerun triggered due to condition met")
                 st.rerun()
         with col2:
             if st.button("Yes, I found it"):
