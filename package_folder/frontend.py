@@ -226,9 +226,11 @@ with st.form(key="search_form"):
     cast_input = st.text_input("Optional: Filter by cast (comma-separated)")
 
     if st.form_submit_button(label="Search Movies"):
-        # Reset page on new search
+    # Reset page on new search
         st.session_state.page = 1
-        st.session_state.query = query
+        st.session_state.query = query.strip()
+        st.session_state.director = director.strip()
+        st.session_state.cast = cast_input.strip()
         st.session_state.has_results = True
 
 # If we have a query (either from form submission or previous state)

@@ -107,12 +107,17 @@ def tokenizer(sentence):
 
 def compute_metadata_score(query_director, query_cast, movie_director, movie_cast):
     score = 0.0
-    movie_director = movie_director or ""
-    movie_cast = movie_cast or ""
 
-    if query_director and query_director.lower() in movie_director.lower():
+    # Normalize inputs
+    query_director = (query_director or "").strip().lower()
+    movie_director = (movie_director or "").strip().lower()
+    movie_cast = (movie_cast or "")
+
+    # Director match
+    if query_director and query_director in movie_director:
         score += 1.0
 
+    # Cast overlap
     if query_cast:
         query_cast_set = set([name.strip().lower() for name in query_cast])
         movie_cast_set = set([name.strip().lower() for name in movie_cast.split(",") if name])
@@ -139,15 +144,27 @@ def search_similar_movies_df(search_term, page=1, per_page=10, query_director=No
     for movie_id, lsi_score in raw_results:
         row = am_titles.iloc[movie_id]
         meta_score = compute_metadata_score(
-            query_director, query_cast,
-            row.get("Director", ""),
-            row.get("Cast", "")
+            query_director or "",
+            query_cast or [],
+            row.get('Director', ''),
+            row.get('Cast', '')  # Make sure 'Cast' exists in your DataFrame
         )
+
         total_score = lsi_score + metadata_weight * meta_score
         combined_scores.append((movie_id, total_score))
 
+    # Debugging: Print out the combined scores before sorting
+    print("Combined Scores before sorting:")
+    for movie_id, score in combined_scores:
+        print(f"Movie ID: {movie_id}, Score: {score}")
+
     # Sort all results by the combined score (higher is better)
     combined_scores.sort(key=itemgetter(1), reverse=True)
+
+    # Debugging: Print out the combined scores after sorting
+    print("Combined Scores after sorting:")
+    for movie_id, score in combined_scores:
+        print(f"Movie ID: {movie_id}, Score: {score}")
 
     # Apply pagination: calculate the start and end indices for the page
     start = (page - 1) * per_page
@@ -171,6 +188,8 @@ def search_similar_movies_df(search_term, page=1, per_page=10, query_director=No
     total_pages = (total_results + per_page - 1) // per_page
 
     return df, {'page': page, 'per_page': per_page, 'total_results': total_results, 'total_pages': total_pages}
+
+
 
 
 def search_similar_movies(search_term, page=1, per_page=10, query_director=None, query_cast=None):
