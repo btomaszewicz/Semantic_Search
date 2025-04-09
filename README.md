@@ -8,10 +8,7 @@ Copy .env.example to .env
 ```sh
 cp .env.example .env
 ```
-Download the models from GCP storage bucket. The bucket is public so you should have acccess.
-```sh
-make download_models
-```
+Generate the models running the Jupyter Notebook [Generate models for the search function] (notebooks/am_movies_models.ipynb)
 
 # Run Locally
 
