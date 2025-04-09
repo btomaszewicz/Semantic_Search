@@ -8,7 +8,7 @@ Copy .env.example to .env
 ```sh
 cp .env.example .env
 ```
-Generate the models running the Jupyter Notebook [Generate models for the search function] (notebooks/am_movies_models.ipynb)
+Generate the models running the Jupyter Notebook [Generate models for the search function](notebooks/am_movies_models.ipynb)
 
 # Run Locally
 
