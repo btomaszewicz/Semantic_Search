@@ -1,5 +1,4 @@
-https://github.com/user-attachments/assets/45729418-b4e7-4f9f-820e-549a8425bb4d
-
+https://github.com/user-attachments/assets/efbe855e-1959-4d63-8ffc-e2643538f1a2
 
 # Prerequisites
 * Docker installed and running on your local machine
