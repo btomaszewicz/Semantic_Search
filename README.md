@@ -1,3 +1,6 @@
+https://github.com/user-attachments/assets/45729418-b4e7-4f9f-820e-549a8425bb4d
+
+
 # Prerequisites
 * Docker installed and running on your local machine
 * Google Cloud SDK (gcloud) installed and configured
