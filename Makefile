@@ -8,8 +8,8 @@ include .env
 build_container_local:
 	docker build --tag=${IMAGE}:dev .
 
-run_container_local: build_container_local
-	docker run -it -e PORT=${PORT} -v ./package_folder:/app/package_folder -p ${PORT}:${PORT} ${IMAGE}:dev
+run_container_local:
+	docker run -it -e PORT=${PORT} -v ./package_folder:/app/package_folder -p ${PORT}:${PORT} --env-file .env ${IMAGE}:dev
 
 #########
 ## DOCKER DEPLOYMENT
@@ -35,7 +35,7 @@ push_image_production:
 
 # Step 5
 deploy:
-	gcloud run deploy --image ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GCP_REPOSITORY}/${IMAGE}:prod --memory ${GAR_MEMORY} --region ${GCP_REGION} --timeout=600 --cpu 2 ${GCP_SERVICE_NAME} --allow-unauthenticated
+	gcloud run deploy --image ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${GCP_REPOSITORY}/${IMAGE}:prod --memory ${GAR_MEMORY} --region ${GCP_REGION} --timeout=600 --cpu 2 ${GCP_SERVICE_NAME} --allow-unauthenticated --env-vars-file .env.yaml
 
 undeploy:
 	gcloud run services delete ${GCP_SERVICE_NAME} --region=${GCP_REGION}
